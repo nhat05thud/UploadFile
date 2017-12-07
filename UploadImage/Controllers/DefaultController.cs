@@ -36,7 +36,7 @@ namespace UploadImage.Controllers
         {
             if (id == 0)
             {
-                return View(new image());
+                return View(new imageModel());
             }
             else
             {
@@ -47,21 +47,24 @@ namespace UploadImage.Controllers
             }
         }
         [HttpPost]
-        public ActionResult AddOrEdit(image img)
+        public ActionResult AddOrEdit(imageModel img)
         {
+            if (img.ImageUpload != null)
+            {
+                string fileName = Path.GetFileNameWithoutExtension(img.ImageUpload.FileName);
+                string extension = Path.GetExtension(img.ImageUpload.FileName);
+                fileName = img.Name + extension;
+                img.ImagePath = "/File/image/" + fileName;
+                img.ImageUpload.SaveAs(Path.Combine(Server.MapPath("/File/image/"), fileName));
+            }
             using (UploadImageContext db = new UploadImageContext())
             {
-                if (img.ImageUpload != null)
-                {
-                    string fileName = Path.GetFileNameWithoutExtension(img.ImageUpload.FileName);
-                    string extension = Path.GetExtension(img.ImageUpload.FileName);
-                    fileName = img.Name + extension;
-                    img.ImagePath = "/File/image/" + fileName;
-                    img.ImageUpload.SaveAs(Path.Combine(Server.MapPath("/File/image/"), fileName));
-                }
                 if (img.Id == 0)
                 {
-                    db.images.Add(img);
+                    image obj = new image();
+                    obj.ImagePath = img.ImagePath;
+                    obj.Name = img.Name;
+                    db.images.Add(obj);
                     db.SaveChanges();
                     return Json(new { success = true, message = "Saved successfully!!!" }, JsonRequestBehavior.AllowGet);
                 }
